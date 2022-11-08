@@ -1,2 +1,4 @@
 Starting audit...
+[ERROR] C:\Users\calin\Desktop\Facultate\Anul 2\poo\tema01\.\src\main\Main.java:73: Line has trailing spaces. [RegexpSingleline]
 Audit done.
+Checkstyle ends with 1 errors.
