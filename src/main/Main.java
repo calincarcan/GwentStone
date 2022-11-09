@@ -85,17 +85,20 @@ public final class Main {
         shuffle(player1.getDecks().get(index1), seed);
         shuffle(player2.getDecks().get(index2), seed);
 
-        ArrayList<CardInput> hand1 = new ArrayList<>();
-        ArrayList<CardInput> hand2 = new ArrayList<>();
-        hand1.add(player1.getDecks().get(index1).get(0));
-        hand2.add(player2.getDecks().get(index2).get(0));
+        ArrayList<Card> hand1 = new ArrayList<>();
+        ArrayList<Card> hand2 = new ArrayList<>();
+        hand1.add(new Card(player1.getDecks().get(index1).get(0)));
+        hand2.add(new Card(player2.getDecks().get(index2).get(0)));
 
+        player1.getDecks().get(index1).remove(0);
+        player2.getDecks().get(index2).remove(0);
+//        hero1 = inputData.getGames().get(0).getStartGame().getPlayerOneHero();
+//        hero2 = inputData.getGames().get(0).getStartGame().getPlayerTwoHero();
+        int firstPlayer = inputData.getGames().get(0).getStartGame().getStartingPlayer();
 
-
-
-        System.out.println(player1);
 
         ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
         objectWriter.writeValue(new File(filePath2), output);
     }
+
 }
