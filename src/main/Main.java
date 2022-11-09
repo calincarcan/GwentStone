@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import checker.CheckerConstants;
+import fileio.CardInput;
+import fileio.DecksInput;
 import fileio.Input;
 
 import java.io.File;
@@ -13,7 +15,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Random;
+
+import static java.util.Collections.shuffle;
 
 /**
  * The entry point to this homework. It runs the checker that tests your implentation.
@@ -68,9 +74,26 @@ public final class Main {
                 Input.class);
 
         ArrayNode output = objectMapper.createArrayNode();
+        // TODO: add here the entry point to your implementation
 
-        //TODO add here the entry point to your implementation
+        // TODO: Got the players' decks, shuffled them and put the first cards in hand
+        DecksInput player1 = inputData.getPlayerOneDecks();
+        DecksInput player2 = inputData.getPlayerTwoDecks();
+        int index1 = inputData.getGames().get(0).getStartGame().getPlayerOneDeckIdx();
+        int index2 = inputData.getGames().get(0).getStartGame().getPlayerTwoDeckIdx();
+        Random seed = new Random(inputData.getGames().get(0).getStartGame().getShuffleSeed());
+        shuffle(player1.getDecks().get(index1), seed);
+        shuffle(player2.getDecks().get(index2), seed);
 
+        ArrayList<CardInput> hand1 = new ArrayList<>();
+        ArrayList<CardInput> hand2 = new ArrayList<>();
+        hand1.add(player1.getDecks().get(index1).get(0));
+        hand2.add(player2.getDecks().get(index2).get(0));
+
+
+
+
+        System.out.println(player1);
 
         ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
         objectWriter.writeValue(new File(filePath2), output);

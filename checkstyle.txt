@@ -1,4 +1,10 @@
 Starting audit...
-[ERROR] C:\Users\calin\Desktop\Facultate\Anul 2\poo\tema01\.\src\main\Main.java:73: Line has trailing spaces. [RegexpSingleline]
+[ERROR] C:\Users\calin\Desktop\Facultate\Anul 2\poo\tema01\.\src\main\Main.java:17:8: Unused import - java.util.ArrayList. [UnusedImports]
+[ERROR] C:\Users\calin\Desktop\Facultate\Anul 2\poo\tema01\.\src\main\Main.java:76:11: Comment matches to-do format 'TODO:'. [TodoComment]
+[ERROR] C:\Users\calin\Desktop\Facultate\Anul 2\poo\tema01\.\src\main\Main.java:79:61: '(' is preceded with whitespace. [MethodParamPad]
+[ERROR] C:\Users\calin\Desktop\Facultate\Anul 2\poo\tema01\.\src\main\Main.java:83:9: 'for' construct must use '{}'s. [NeedBraces]
+[ERROR] C:\Users\calin\Desktop\Facultate\Anul 2\poo\tema01\.\src\main\Main.java:85:9: 'for' construct must use '{}'s. [NeedBraces]
+[ERROR] C:\Users\calin\Desktop\Facultate\Anul 2\poo\tema01\.\src\main\Test.java:4:8: Unused import - fileio.CardInput. [UnusedImports]
+[ERROR] C:\Users\calin\Desktop\Facultate\Anul 2\poo\tema01\.\src\main\Test.java:8:8: Unused import - java.util.ArrayList. [UnusedImports]
 Audit done.
-Checkstyle ends with 1 errors.
+Checkstyle ends with 7 errors.
