@@ -1,4 +1,4 @@
-package main;
+package Cards;
 
 import fileio.CardInput;
 
@@ -18,11 +18,11 @@ public class Card {
     }
     public Card(CardInput card) {
         mana = card.getMana();
-        description = card.getDescription();
-        colors = card.getColors();
-        name = getName();
+        description = new String(card.getDescription());
+        colors = new ArrayList<String>(card.getColors());
+        name = new String(card.getName());
     }
-
+    public void ability() {}
     public int getMana() {
         return mana;
     }

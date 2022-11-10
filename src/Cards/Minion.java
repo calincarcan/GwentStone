@@ -1,4 +1,4 @@
-package main;
+package Cards;
 
 import fileio.CardInput;
 

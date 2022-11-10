@@ -1,12 +1,13 @@
 package main;
 
+import Cards.*;
 import checker.Checker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import checker.CheckerConstants;
-import fileio.CardInput;
+import fileio.ActionsInput;
 import fileio.DecksInput;
 import fileio.Input;
 
@@ -75,26 +76,53 @@ public final class Main {
 
         ArrayNode output = objectMapper.createArrayNode();
         // TODO: add here the entry point to your implementation
-
-        // TODO: Got the players' decks, shuffled them and put the first cards in hand
-        DecksInput player1 = inputData.getPlayerOneDecks();
-        DecksInput player2 = inputData.getPlayerTwoDecks();
+        Hero hero1 = new Hero(inputData.getGames().get(0).getStartGame().getPlayerOneHero());
+        Hero hero2 = new Hero(inputData.getGames().get(0).getStartGame().getPlayerTwoHero());
         int index1 = inputData.getGames().get(0).getStartGame().getPlayerOneDeckIdx();
         int index2 = inputData.getGames().get(0).getStartGame().getPlayerTwoDeckIdx();
-        Random seed = new Random(inputData.getGames().get(0).getStartGame().getShuffleSeed());
-        shuffle(player1.getDecks().get(index1), seed);
-        shuffle(player2.getDecks().get(index2), seed);
+        DecksInput decks1 = inputData.getPlayerOneDecks();
+        DecksInput decks2 = inputData.getPlayerTwoDecks();
+        boolean order = inputData.getGames().get(0).getStartGame().getStartingPlayer() == 1;
 
-        ArrayList<Card> hand1 = new ArrayList<>();
-        ArrayList<Card> hand2 = new ArrayList<>();
-        hand1.add(new Card(player1.getDecks().get(index1).get(0)));
-        hand2.add(new Card(player2.getDecks().get(index2).get(0)));
+        Player player1 = new Player(decks1, index1, hero1, order);
+        Player player2 = new Player(decks2, index2, hero2, !order);
+//        inputData.getPlayerOneDecks()
+        shuffle(player1.getDecks().get(index1),
+                new Random(inputData.getGames().get(0).getStartGame().getShuffleSeed()));
+        shuffle(player2.getDecks().get(index2),
+                new Random(inputData.getGames().get(0).getStartGame().getShuffleSeed()));
 
-        player1.getDecks().get(index1).remove(0);
-        player2.getDecks().get(index2).remove(0);
-//        hero1 = inputData.getGames().get(0).getStartGame().getPlayerOneHero();
-//        hero2 = inputData.getGames().get(0).getStartGame().getPlayerTwoHero();
-        int firstPlayer = inputData.getGames().get(0).getStartGame().getStartingPlayer();
+        player1.drawCard();
+        player2.drawCard();
+        for (int var = 0; var < inputData.getGames().get(0).getActions().size(); var++) {
+            ActionsInput action = inputData.getGames().get(0).getActions().get(var);
+            String command = action.getCommand();
+            Player player;
+            int index;
+            int indexDeck;
+            ArrayList<Card> current_deck;
+            if (action.getPlayerIdx() == 1) {
+                player = player1;
+                index = 1;
+                indexDeck = index1;
+            }
+            else {
+                player = player2;
+                index = 2;
+                indexDeck = index2;
+            }
+            if (command.equals("getPlayerDeck")) {
+                output.addObject().put("command", command).put("playerIdx", index)
+                        .putPOJO("output", player.getDecks().get(indexDeck));
+            }
+            if (command.equals("getPlayerHero")) {
+                output.addObject().put("command", command).put("playerIdx", index)
+                        .putPOJO("output", player.getHero());
+            }
+            if (command.equals("getPlayerTurn")) {
+                output.addObject().put("command", command).put("output", index);
+            }
+        }
 
 
         ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
