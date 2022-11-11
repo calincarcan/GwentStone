@@ -1,7 +1,8 @@
 package Cards;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import fileio.CardInput;
-
+@JsonPropertyOrder({"mana", "attackDamage", "health", "description", "colors", "name"})
 public class Minion extends Card{
     private int attackDamage;
     private int health;

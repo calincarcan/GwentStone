@@ -1,4 +1,4 @@
-package main;
+package GameStuff;
 
 import Cards.Card;
 import Cards.Environment;
@@ -30,10 +30,10 @@ public class Player {
         getHand().remove(card);
     }
 
-    private boolean checkEnvironment(String name) {
+    public static boolean checkEnvironment(String name) {
         return name.equals("Heart Hound") || name.equals("Winterfell") || name.equals("Firestorm");
     }
-    private boolean checkMinion(String name) {
+    public static boolean checkMinion(String name) {
         return  name.equals("Sentinel") || name.equals("Berserker") || name.equals("Goliath") ||
                 name.equals("Warden") || name.equals("The Ripper") || name.equals("Miraj") ||
                 name.equals("The Cursed One") || name.equals("Disciple");
@@ -45,11 +45,9 @@ public class Player {
             for (int j = 0; j < deckInput.getDecks().get(i).size(); j++) {
                 if (checkMinion(deckInput.getDecks().get(i).get(j).getName())) {
                     decks.get(i).add(new Minion(deckInput.getDecks().get(i).get(j)));
-                    System.out.println("s-a luat " + deckInput.getDecks().get(i).get(j).getName());
                 }
                 else if (checkEnvironment(deckInput.getDecks().get(i).get(j).getName())) {
                     decks.get(i).add(new Environment(deckInput.getDecks().get(i).get(j)));
-                    System.out.println("s-a luat " + deckInput.getDecks().get(i).get(j).getName());
                 }
             }
         }

@@ -1,12 +1,27 @@
 package Cards;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import fileio.CardInput;
 
 import java.util.ArrayList;
-
+@JsonPropertyOrder({"mana", "description", "colors", "name"})
+@JsonIgnoreProperties({ "frozen" })
 public class Card {
-    private int mana;
+    private static boolean frozen = true;
+
+    public void freeze() {
+        frozen = true;
+    }
+    public void unfreeze(){
+        frozen = false;
+    }
+    public boolean getFrozen() {
+        return frozen;
+    }
     private String description;
+    private int mana;
     private ArrayList<String> colors;
     private String name;
     public Card(int mana, String description, String name, ArrayList<String> colors){
