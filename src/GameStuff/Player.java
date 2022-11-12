@@ -9,21 +9,36 @@ import fileio.DecksInput;
 import java.util.ArrayList;
 
 public class Player {
+    private int mana;
     private ArrayList<ArrayList<Card>> decks;
-    private static ArrayList<Card> hand = null;
+    private static ArrayList<Card> hand = new ArrayList<>();
     private int nrCardsInDeck;
     private int nrDecks;
     private int indexDeck;
     private Hero hero;
-    private boolean order;
+
+    public int getMana() {
+        return mana;
+    }
+
+    public void setMana(int mana) {
+        this.mana = mana;
+    }
+    public void useMana(int mana) {
+        this.mana -= mana;
+    }
+    public void growMana(int round) {
+        if (round < 10)
+            this.mana += round;
+        else
+            this.mana += 10;
+    }
 
     public void drawCard() {
         getHand().add(decks.get(indexDeck).get(0));
         decks.get(indexDeck).remove(0);
     }
     public ArrayList<Card> getHand() {
-        if (hand == null)
-            hand = new ArrayList<>();
         return hand;
     }
     public void removeFromHand(Card card) {
@@ -38,7 +53,7 @@ public class Player {
                 name.equals("Warden") || name.equals("The Ripper") || name.equals("Miraj") ||
                 name.equals("The Cursed One") || name.equals("Disciple");
     }
-    public Player(DecksInput deckInput, int indexDeck, Hero hero, boolean order) {
+    public Player(DecksInput deckInput, int indexDeck, Hero hero) {
         decks = new ArrayList<>();
         for (int i = 0; i < deckInput.getDecks().size(); i++) {
             decks.add(new ArrayList<>());
@@ -56,7 +71,6 @@ public class Player {
         this.indexDeck = indexDeck;
         this.nrDecks = deckInput.getNrDecks();
         this.hero = hero;
-        this.order = order;
     }
 
     public ArrayList<ArrayList<Card>> getDecks() {

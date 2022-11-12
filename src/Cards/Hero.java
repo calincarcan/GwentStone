@@ -8,9 +8,6 @@ import java.util.ArrayList;
 @JsonPropertyOrder({"mana", "description", "colors", "name"})
 //@JsonIgnoreProperties({ "manaIncrement" })
 public class Hero {
-    public void addMana(int round) {
-        mana += Math.min(round, 10);
-    }
     private int mana;
     private String description;
     private ArrayList<String> colors;

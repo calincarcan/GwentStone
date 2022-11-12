@@ -9,6 +9,15 @@ import java.util.ArrayList;
 @JsonPropertyOrder({"mana", "description", "colors", "name"})
 @JsonIgnoreProperties({ "frozen" })
 public class Card {
+    public static boolean frontMinion(String name) {
+        return name.equals("The Ripper") || name.equals("Miraj") || name.equals("Goliath") || name.equals("Warden");
+    }
+    public static boolean backMinion(String name) {
+        return name.equals("Sentinel") || name.equals("Berserker") || name.equals("Disciple") || name.equals("The Cursed One");
+    }
+    public static boolean checkEnvironment(String name) {
+        return name.equals("Winterfell") || name.equals("Firestorm") || name.equals("Heart Hound");
+    }
     private static boolean frozen = true;
 
     public void freeze() {

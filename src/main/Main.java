@@ -2,7 +2,6 @@ package main;
 
 import Cards.*;
 import GameStuff.Player;
-import GameStuff.Table;
 import checker.Checker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,9 +17,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Random;
 
+import static java.util.Collections.min;
 import static java.util.Collections.shuffle;
 
 /**
@@ -85,9 +86,11 @@ public final class Main {
         DecksInput decks2 = inputData.getPlayerTwoDecks();
         boolean order = inputData.getGames().get(0).getStartGame().getStartingPlayer() == 1;
 
-        Table table;
-        Player player1 = new Player(decks1, index1, hero1, order);
-        Player player2 = new Player(decks2, index2, hero2, !order);
+        ArrayList<ArrayList<Card>> board = new ArrayList<>();
+        for (int i = 0; i < 4; i++)
+            board.add(new ArrayList<>());
+        Player player1 = new Player(decks1, index1, hero1);
+        Player player2 = new Player(decks2, index2, hero2);
         shuffle(player1.getDecks().get(index1),
                 new Random(inputData.getGames().get(0).getStartGame().getShuffleSeed()));
         shuffle(player2.getDecks().get(index2),
@@ -98,62 +101,88 @@ public final class Main {
 
         Player activePlayer = order ? player1:player2;
         int activePlayerId = order ? 1:2;
-        int round = 1;
+        int round = 2;
         int turn = 1;
-        for (ActionsInput action : inputData.getGames().get(0).getActions()) {
-            System.out.println(action);
-            String command = action.getCommand();
 
-            Player printPlayer = action.getPlayerIdx() == 1 ? player1:player2;
+        for (ActionsInput action : inputData.getGames().get(0).getActions()) {
+            String command = action.getCommand();
+            Player printPlayer = action.getPlayerIdx() == 1 ? player1 : player2;
             int printId = action.getPlayerIdx() == 1 ? 1 : 2;
-            int deckId = printPlayer == player1 ? index1:index2;
+            int deckId = printPlayer == player1 ? index1 : index2;
             switch (command) {
-                case "getPlayerDeck":
+                case "getPlayerDeck": {
                     output.addObject().put("command", command).put("playerIdx", printId)
                             .putPOJO("output", printPlayer.getDecks().get(deckId));
                     break;
-                case "getPlayerHero":
+                }
+                case "getPlayerHero": {
                     output.addObject().put("command", command).put("playerIdx", printId)
                             .putPOJO("output", printPlayer.getHero());
                     break;
-                case "getPlayerTurn":
+                }
+                case "getPlayerTurn": {
                     output.addObject().put("command", command).put("output", activePlayerId);
-                 break;
-                case "endPlayerTurn":
-                    // TODO: Probably not working
+                    break;
+                }
+                case "endPlayerTurn": {
                     if (turn == 1) {
                         if (activePlayerId == 1) {
                             activePlayerId = 2;
                             activePlayer = player2;
-                        }
-                        else if (activePlayerId == 2) {
+                        } else {
                             activePlayerId = 1;
                             activePlayer = player1;
                         }
                         turn++;
-                    }
-                    else if (turn == 2) {
-                        player1.getHero().addMana(round);
-                        player2.getHero().addMana(round);
+                    } else if (turn == 2) {
+                        player1.growMana(round);
+                        player2.growMana(round);
                         player1.drawCard();
                         player2.drawCard();
                         turn = 1;
                         round++;
                     }
                     break;
-                case "getCardsInHand":
+                }
+                case "getCardsInHand": {
+                    ArrayList<Card> copyHand = new ArrayList<>(printPlayer.getHand());
                     output.addObject().put("command", command).put("playerIdx", printId)
-                            .putPOJO("output", printPlayer.getHand());
+                            .putPOJO("output", copyHand);
                     break;
-                case "placeCard":
-//                    if (Player.checkEnvironment(printPlayer.getHand().get(action.getHandIdx()).getName())) {
-//                        Cannot place environment card on table.
-//                    }
-
+                }
+                // TODO: Hand needs copy
+                case "placeCard": {
+                    String name = activePlayer.getHand().get(action.getHandIdx()).getName();
+                    if (Card.frontMinion(name)) {
+                        if (activePlayerId == 1) {
+                            board.get(2).add(activePlayer.getHand().get(action.getHandIdx()));
+                            activePlayer.useMana(activePlayer.getHand().get(action.getHandIdx()).getMana());
+                            activePlayer.getHand().remove(action.getHandIdx());
+                        } else {
+                            board.get(1).add(activePlayer.getHand().get(action.getHandIdx()));
+                            activePlayer.useMana(activePlayer.getHand().get(action.getHandIdx()).getMana());
+                            activePlayer.getHand().remove(action.getHandIdx());
+                        }
+                    }
+                    if (Card.backMinion(name)) {
+                        if (activePlayerId == 1) {
+                            board.get(3).add(activePlayer.getHand().get(action.getHandIdx()));
+                            activePlayer.useMana(activePlayer.getHand().get(action.getHandIdx()).getMana());
+                            activePlayer.getHand().remove(action.getHandIdx());
+                        } else {
+                            board.get(0).add(activePlayer.getHand().get(action.getHandIdx()));
+                            activePlayer.useMana(activePlayer.getHand().get(action.getHandIdx()).getMana());
+                            activePlayer.getHand().remove(action.getHandIdx());
+                        }
+                    }
                     break;
+                }
+                case "getPlayerMana": {
+                    output.addObject().put("command", command).put("playerIdx", printId).
+                            put("output", printPlayer.getMana());
+                }
             }
         }
-
         ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
         objectWriter.writeValue(new File(filePath2), output);
     }
