@@ -1,0 +1,350 @@
+package main;
+
+import Cards.*;
+import GameStuff.Player;
+import checker.Checker;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import checker.CheckerConstants;
+import fileio.ActionsInput;
+import fileio.CardInput;
+import fileio.DecksInput;
+import fileio.Input;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Random;
+
+import static java.util.Collections.*;
+
+/**
+ * The entry point to this homework. It runs the checker that tests your implentation.
+ */
+public final class Main {
+    /**
+     * for coding style
+     */
+    private Main() {
+    }
+
+    /**
+     * DO NOT MODIFY MAIN METHOD
+     * Call the checker
+     * @param args from command line
+     * @throws IOException in case of exceptions to reading / writing
+     */
+    public static void main(final String[] args) throws IOException {
+        File directory = new File(CheckerConstants.TESTS_PATH);
+        Path path = Paths.get(CheckerConstants.RESULT_PATH);
+
+        if (Files.exists(path)) {
+            File resultFile = new File(String.valueOf(path));
+            for (File file : Objects.requireNonNull(resultFile.listFiles())) {
+                file.delete();
+            }
+            resultFile.delete();
+        }
+        Files.createDirectories(path);
+
+        for (File file : Objects.requireNonNull(directory.listFiles())) {
+            String filepath = CheckerConstants.OUT_PATH + file.getName();
+            File out = new File(filepath);
+            boolean isCreated = out.createNewFile();
+            if (isCreated) {
+                action(file.getName(), filepath);
+            }
+        }
+
+        Checker.calculateScore();
+    }
+
+    /**
+     * @param filePath1 for input file
+     * @param filePath2 for output file
+     * @throws IOException in case of exceptions to reading / writing
+     */
+    public static void action(final String filePath1,
+                              final String filePath2) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Input inputData = objectMapper.readValue(new File(CheckerConstants.TESTS_PATH + filePath1),
+                Input.class);
+
+        ArrayNode output = objectMapper.createArrayNode();
+        // TODO: add here the entry point to your implementation
+        Hero hero1 = new Hero(inputData.getGames().get(0).getStartGame().getPlayerOneHero());
+        Hero hero2 = new Hero(inputData.getGames().get(0).getStartGame().getPlayerTwoHero());
+        int index1 = inputData.getGames().get(0).getStartGame().getPlayerOneDeckIdx();
+        int index2 = inputData.getGames().get(0).getStartGame().getPlayerTwoDeckIdx();
+        DecksInput decks1 = inputData.getPlayerOneDecks();
+        DecksInput decks2 = inputData.getPlayerTwoDecks();
+        boolean order = inputData.getGames().get(0).getStartGame().getStartingPlayer() == 1;
+
+        ArrayList<ArrayList<Card>> board = new ArrayList<>();
+        for (int i = 0; i < 4; i++)
+            board.add(new ArrayList<>());
+        Player player1 = new Player(decks1, index1, hero1);
+        Player player2 = new Player(decks2, index2, hero2);
+        shuffle(player1.getDecks().get(index1),
+                new Random(inputData.getGames().get(0).getStartGame().getShuffleSeed()));
+        shuffle(player2.getDecks().get(index2),
+                new Random(inputData.getGames().get(0).getStartGame().getShuffleSeed()));
+
+        player1.drawCard();
+        player2.drawCard();
+
+        int round = 2;
+        int turn = 1;
+        int activePlayerId = inputData.getGames().get(0).getStartGame().getStartingPlayer();
+        Player activePlayer = activePlayerId == 1 ? player1:player2;
+        for (ActionsInput action : inputData.getGames().get(0).getActions()) {
+            Player printPlayer = action.getPlayerIdx() == 1 ? player1:player2;
+            int printPlayerId = action.getPlayerIdx() == 1 ? 1:2;
+            switch (action.getCommand()) {
+                case "getPlayerDeck": {
+                    if (action.getPlayerIdx() == 1) {
+                        output.addObject().put("command", action.getCommand()).put("playerIdx", 1)
+                                .putPOJO("output", player1.getDecks().get(player1.getIndexDeck()));
+                    }
+                    else {
+                        output.addObject().put("command", action.getCommand()).put("playerIdx", 2)
+                                .putPOJO("output", player2.getDecks().get(player2.getIndexDeck()));
+                    }
+                    break;
+                }
+                case "getPlayerHero": {
+                    if (action.getPlayerIdx() == 1) {
+                        output.addObject().put("command", action.getCommand()).put("playerIdx", 1)
+                                .putPOJO("output", player1.getHero());
+                    }
+                    else {
+                        output.addObject().put("command", action.getCommand()).put("playerIdx", 2)
+                                .putPOJO("output", player2.getHero());
+                    }
+                    break;
+                }
+                case "getPlayerTurn": {
+                    if (activePlayerId == 1) {
+                        output.addObject().put("command", action.getCommand()).put("output", 1);
+                    }
+                    else {
+                        output.addObject().put("command", action.getCommand()).put("output", 2);
+                    }
+                    break;
+                }
+                case "endPlayerTurn": {
+                    if (turn == 1) {
+                        activePlayerId = activePlayerId == 1 ? 2:1;
+                        if (activePlayerId == 1)
+                            player1.drawCard();
+                        else
+                            player2.drawCard();
+                        turn++;
+                    }
+                    else {
+                        activePlayerId = activePlayerId == 1 ? 2:1;
+                        if (activePlayerId == 1)
+                            player1.drawCard();
+                        else
+                            player2.drawCard();
+                        player1.growMana(round);
+                        player2.growMana(round);
+                        turn = 1;
+                        round++;
+                    }
+                    break;
+                }
+                case "getCardsInHand": {
+                    ArrayList<Card> copyHand = new ArrayList<Card>();
+                    if (action.getPlayerIdx() == 1) {
+                        for (Card card : player1.getHand()) {
+                            if (Card.checkEnvironment(card.getName())) {
+                                copyHand.add(new Environment(card.getMana(), card.getDescription(), card.getName(), card.getColors()));
+                            }
+                            if (Card.checkMinion(card.getName())) {
+                                copyHand.add(new Minion(card.getMana(), ((Minion) card).getAttackDamage(), ((Minion) card).getHealth(), card.getDescription(), card.getColors(), card.getName()));
+                            }
+                        }
+                        output.addObject().put("command", action.getCommand()).put("playerIdx", 1)
+                                .putPOJO("output", copyHand);
+                    }
+                    else {
+                        for (Card card : player2.getHand()) {
+                            if (Card.checkEnvironment(card.getName())) {
+                                copyHand.add(new Environment(card.getMana(), card.getDescription(), card.getName(), card.getColors()));
+                            }
+                            if (Card.checkMinion(card.getName())) {
+                                copyHand.add(new Minion(card.getMana(), ((Minion) card).getAttackDamage(), ((Minion) card).getHealth(), card.getDescription(), card.getColors(), card.getName()));
+                            }
+                        }
+                        output.addObject().put("command", action.getCommand()).put("playerIdx", 2)
+                                .putPOJO("output", copyHand);
+                    }
+                    break;
+                }
+                case "placeCard": {
+                    if (activePlayerId == 1) {
+                        String name = player1.getHand().get(action.getHandIdx()).getName();
+                        if (Card.checkEnvironment(name)) {
+                            output.addObject().put("command", action.getCommand()).put("handIdx", action.getHandIdx()).
+                                    put("error", "Cannot place environment card on table.");
+                            break;
+                        }
+                        if (player1.getMana() < player1.getHand().get(action.getHandIdx()).getMana()) {
+                            output.addObject().put("command", action.getCommand()).put("handIdx", action.getHandIdx()).
+                                    put("error", "Not enough mana to place card on table.");
+                            break;
+                        }
+                        if (Card.frontMinion(name)) {
+                            if (board.get(2).size() == 5) {
+                                output.addObject().put("command", action.getCommand()).put("handIdx", action.getHandIdx()).
+                                        put("error", "Cannot place card on table since row is full.");
+                                break;
+                            }
+                            board.get(2).add(player1.getHand().get(action.getHandIdx()));
+                            player1.useMana(player1.getHand().get(action.getHandIdx()).getMana());
+                            player1.getHand().remove(action.getHandIdx());
+                        }
+                        else if (Card.backMinion(name)) {
+                            if (board.get(3).size() == 5) {
+                                output.addObject().put("command", action.getCommand()).put("handIdx", action.getHandIdx()).
+                                        put("error", "Cannot place card on table since row is full.");
+                                break;
+                            }
+                            board.get(3).add(player1.getHand().get(action.getHandIdx()));
+                            player1.useMana(player1.getHand().get(action.getHandIdx()).getMana());
+                            player1.getHand().remove(action.getHandIdx());
+                        }
+
+                    }
+                    else {
+                        String name = player2.getHand().get(action.getHandIdx()).getName();
+                        if (Card.checkEnvironment(name)) {
+                            output.addObject().put("command", action.getCommand()).put("handIdx", action.getHandIdx()).
+                                    put("error", "Cannot place environment card on table.");
+                            break;
+                        }
+                        if (player2.getMana() < player2.getHand().get(action.getHandIdx()).getMana()) {
+                            output.addObject().put("command", action.getCommand()).put("handIdx", action.getHandIdx()).
+                                    put("error", "Not enough mana to place card on table.");
+                            break;
+                        }
+                        if (Card.frontMinion(name)) {
+                            if (board.get(1).size() == 5) {
+                                output.addObject().put("command", action.getCommand()).put("handIdx", action.getHandIdx()).
+                                        put("error", "Cannot place card on table since row is full.");
+                                break;
+                            }
+                            board.get(1).add(player2.getHand().get(action.getHandIdx()));
+                            player2.useMana(player2.getHand().get(action.getHandIdx()).getMana());
+                            player2.getHand().remove(action.getHandIdx());
+                        }
+                        if (Card.backMinion(name)) {
+                            if (board.get(0).size() == 5) {
+                                output.addObject().put("command", action.getCommand()).put("handIdx", action.getHandIdx()).
+                                        put("error", "Cannot place card on table since row is full.");
+                                break;
+                            }
+                            board.get(0).add(player2.getHand().get(action.getHandIdx()));
+                            player2.useMana(player2.getHand().get(action.getHandIdx()).getMana());
+                            player2.getHand().remove(action.getHandIdx());
+                        }
+                    }
+                    break;
+                }
+                case "getPlayerMana": {
+                    if (action.getPlayerIdx() == 1) {
+                        output.addObject().put("command", action.getCommand()).put("playerIdx", 1).
+                                put("output", player1.getMana());
+                    }
+                    else {
+                        output.addObject().put("command", action.getCommand()).put("playerIdx", 2).
+                                put("output", player2.getMana());
+                    }
+                    break;
+                }
+                case "getCardsOnTable": {
+                    output.addObject().put("command", action.getCommand()).putPOJO("output", board);
+                    break;
+                }
+                case "getEnvironmentCardsInHand": {
+                    if (action.getPlayerIdx() == 1) {
+                        putEnvironments(output, player1, action);
+                    }
+                    else {
+                        putEnvironments(output, player2, action);
+                    }
+                    break;
+                }
+                case "useEnvironmentCard": {
+                    if (activePlayerId == 1) {
+                        if (Card.checkEnvironment(player1.getHand().get(action.getHandIdx()).getName())) {
+                            if (player1.getMana() < ((Environment) player1.getHand().get(action.getHandIdx())).getMana()) {
+                                output.addObject().put("command", action.getCommand()).put("handIdx", action.getHandIdx()).
+                                        put("affectedRow", action.getAffectedRow()).put("error", "Not enough mana to use environment card.");
+                                break;
+                            }
+                            ((Environment) player1.getHand().get(action.getHandIdx())).useAbility(action.getAffectedRow(), board);
+                            player1.useMana(player1.getHand().get(action.getHandIdx()).getMana());
+                            player1.getHand().remove(action.getHandIdx());
+                        } else {
+                            output.addObject().put("command", action.getCommand()).put("handIdx", action.getHandIdx()).
+                                    put("affectedRow", action.getAffectedRow()).put("error", "Chosen card is not of type environment.");
+                            break;
+                        }
+                    }
+                    else {
+                        if (Card.checkEnvironment(player2.getHand().get(action.getHandIdx()).getName())) {
+                            if (player2.getMana() < ((Environment) player2.getHand().get(action.getHandIdx())).getMana()) {
+                                output.addObject().put("command", action.getCommand()).put("handIdx", action.getHandIdx()).
+                                        put("affectedRow", action.getAffectedRow()).put("error", "Not enough mana to use environment card.");
+                                break;
+                            }
+                            ((Environment) player2.getHand().get(action.getHandIdx())).useAbility(action.getAffectedRow(), board);
+                            player2.useMana(player2.getHand().get(action.getHandIdx()).getMana());
+                            player2.getHand().remove(action.getHandIdx());
+                        } else {
+                            output.addObject().put("command", action.getCommand()).put("handIdx", action.getHandIdx()).
+                                    put("affectedRow", action.getAffectedRow()).put("error", "Chosen card is not of type environment.");
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case "getCardAtPosition": {
+                    Card copyMinion = new Minion(
+                            board.get(action.getX()).get(action.getY()).getMana(),
+                            ((Minion)board.get(action.getX()).get(action.getY())).getAttackDamage(),
+                            ((Minion)board.get(action.getX()).get(action.getY())).getHealth(),
+                            board.get(action.getX()).get(action.getY()).getDescription(),
+                            board.get(action.getX()).get(action.getY()).getColors(),
+                            board.get(action.getX()).get(action.getY()).getName());
+                    output.addObject().put("command", action.getCommand()).putPOJO("output", copyMinion);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+        ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+        objectWriter.writeValue(new File(filePath2), output);
+    }
+
+    public static void putEnvironments(ArrayNode output, Player player2, ActionsInput action) {
+        ArrayList<Card> copyEnvironments = new ArrayList<Card>();
+        for (Card card : player2.getHand()) {
+            if (Card.checkEnvironment(card.getName())) {
+                copyEnvironments.add(new Environment(card.getMana(), card.getDescription(), card.getName(), card.getColors()));
+            }
+        }
+        output.addObject().put("command", action.getCommand()).put("playerIdx", 1)
+                .putPOJO("output", copyEnvironments);
+    }
+
+}
