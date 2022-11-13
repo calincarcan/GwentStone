@@ -4,8 +4,10 @@ import Cards.Card;
 import Cards.Environment;
 import Cards.Hero;
 import Cards.Minion;
+import fileio.Coordinates;
 import fileio.DecksInput;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Player {
@@ -16,7 +18,44 @@ public class Player {
     private int nrDecks;
     private int indexDeck;
     private Hero hero;
-
+    public static boolean checkTanks(int playerId, ArrayList<ArrayList<Card>> board, Coordinates attacked) {
+        boolean isTank = false;
+        boolean areTanks = false;
+        Card card = board.get(attacked.getX()).get(attacked.getY());
+        if (Card.isTank(card.getName()))
+            isTank = true;
+        if (playerId == 1) {
+            for (Card var : board.get(0))
+                if (Card.isTank(var.getName())) {
+                    areTanks = true;
+                    break;
+                }
+            for (Card var : board.get(1))
+                if (Card.isTank(var.getName())) {
+                    areTanks = true;
+                    break;
+                }
+        } else {
+            for (Card var : board.get(2))
+                if (Card.isTank(var.getName())) {
+                    areTanks = true;
+                    break;
+                }
+            for (Card var : board.get(3))
+                if (Card.isTank(var.getName())) {
+                    areTanks = true;
+                    break;
+                }
+        }
+        if (isTank)
+            return true;
+        return !areTanks;
+    }
+    public static boolean checkAttack(int activePlayerId, int row) {
+        if (activePlayerId == 1 && row == 0 || row == 1)
+            return true;
+        return activePlayerId == 2 && row == 2 || row == 3;
+    }
     public int getMana() {
         return mana;
     }

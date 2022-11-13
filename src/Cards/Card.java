@@ -7,8 +7,11 @@ import fileio.CardInput;
 
 import java.util.ArrayList;
 @JsonPropertyOrder({"mana", "description", "colors", "name"})
-@JsonIgnoreProperties({ "frozen" })
+@JsonIgnoreProperties({ "frozen", "used", "frozenCount" })
 public class Card {
+    public static boolean isTank(String name) {
+        return name.equals("Warden ") || name.equals("Goliath ");
+    }
     public static boolean checkEnvironment(String name) {
         return name.equals("Heart Hound") || name.equals("Winterfell") || name.equals("Firestorm");
     }
@@ -24,9 +27,29 @@ public class Card {
         return name.equals("Sentinel") || name.equals("Berserker") || name.equals("Disciple") || name.equals("The Cursed One");
     }
     private boolean frozen;
+    private int frozenCount;
+
+    public int getFrozenCount() {
+        return frozenCount;
+    }
+
+    public void setFrozenCount(int frozenCount) {
+        this.frozenCount = frozenCount;
+    }
+
+    private boolean used;
+
+    public boolean isUsed() {
+        return used;
+    }
+
+    public void setUsed(boolean used) {
+        this.used = used;
+    }
 
     public void freeze() {
         frozen = true;
+        frozenCount = 0;
     }
     public void unfreeze(){
         frozen = false;

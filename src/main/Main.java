@@ -125,23 +125,52 @@ public final class Main {
                 case "endPlayerTurn": {
                     activePlayerId = activePlayerId == 1 ? 2:1;
                     if (activePlayerId == 1) {
-                        for (int i = 0; i < board.get(2).size(); i++)
-                            board.get(2).get(i).unfreeze();
-                        for (int i = 0; i < board.get(3).size(); i++)
-                            board.get(3).get(i).unfreeze();
+                        for (int i = 0; i < board.get(2).size(); i++) {
+                            if (board.get(2).get(i).getFrozenCount() == 1) {
+                                board.get(2).get(i).unfreeze();
+                                board.get(2).get(i).setFrozenCount(0);
+                            }
+                            else
+                                board.get(2).get(i).setFrozenCount(1);
+                            board.get(2).get(i).setUsed(false);
+                        }
+                        for (int i = 0; i < board.get(3).size(); i++) {
+                            if (board.get(3).get(i).getFrozenCount() == 1) {
+                                board.get(3).get(i).unfreeze();
+                                board.get(3).get(i).setFrozenCount(0);
+                            }
+                            else
+                                board.get(3).get(i).setFrozenCount(1);
+                            board.get(3).get(i).setUsed(false);
+                        }
                     } else {
-                        for (int i = 0; i < board.get(0).size(); i++)
-                            board.get(0).get(i).unfreeze();
-                        for (int i = 0; i < board.get(1).size(); i++)
-                            board.get(1).get(i).unfreeze();
+                        for (int i = 0; i < board.get(0).size(); i++) {
+                            if (board.get(0).get(i).getFrozenCount() == 1) {
+                                board.get(0).get(i).unfreeze();
+                                board.get(0).get(i).setFrozenCount(0);
+                            }
+                            else
+                                board.get(0).get(i).setFrozenCount(1);
+                            board.get(0).get(i).setUsed(false);
+                        }
+                        for (int i = 0; i < board.get(1).size(); i++) {
+                            if (board.get(1).get(i).getFrozenCount() == 1) {
+                                board.get(1).get(i).unfreeze();
+                                board.get(1).get(i).setFrozenCount(0);
+                            }
+                            else
+                                board.get(1).get(i).setFrozenCount(1);
+                            board.get(1).get(i).setUsed(false);
+                        }
                     }
                     activePlayer = activePlayerId == 1 ? player1:player2;
-                    activePlayer.drawCard();
                     if (turn == 1)
                         turn++;
                     else {
                         player1.growMana(round);
                         player2.growMana(round);
+                        player1.drawCard();
+                        player2.drawCard();
                         turn = 1;
                         round++;
                     }
@@ -310,6 +339,39 @@ public final class Main {
                                         board.get(i).get(j).getColors(),
                                         board.get(i).get(j).getName()));
                     output.addObject().put("command", command).putPOJO("output", frozenCards);
+                    break;
+                }
+                case "cardUsesAttack": {
+                    int attackedX = action.getCardAttacked().getX();
+                    int attackerX = action.getCardAttacker().getX();
+                    int attackedY = action.getCardAttacked().getY();
+                    int attackerY = action.getCardAttacker().getY();
+                    Card attacker = board.get(attackerX).get(attackerY);
+                    Card attacked = board.get(attackedX).get(attackedY);
+                    if (attacker.getFrozen()) {
+                        output.addObject().put("command", command).putPOJO("cardAttacker", action.getCardAttacker()).
+                                putPOJO("cardAttacked", action.getCardAttacked()).put("error", "Attacker card is frozen.");
+                        break;
+                    }
+                    if (attacker.isUsed()) {
+                        output.addObject().put("command", command).putPOJO("cardAttacker", action.getCardAttacker()).
+                                putPOJO("cardAttacked", action.getCardAttacked()).put("error", "Attacker card has already attacked this turn.");
+                        break;
+                    }
+                    if (!Player.checkAttack(activePlayerId, attackedX)) {
+                        output.addObject().put("command", command).putPOJO("cardAttacker", action.getCardAttacker()).
+                                putPOJO("cardAttacked", action.getCardAttacked()).put("error", "Attacked card does not belong to the enemy.");
+                        break;
+                    }
+                    if (!Player.checkTanks(activePlayerId, board, action.getCardAttacked())) {
+                        output.addObject().put("command", command).putPOJO("cardAttacker", action.getCardAttacker()).
+                                putPOJO("cardAttacked", action.getCardAttacked()).put("error", "Attacked card is not of type 'Tank'.");
+                        break;
+                    }
+                    ((Minion)attacked).setHealth(((Minion)attacked).getHealth() - ((Minion)attacker).getAttackDamage());
+                    if (((Minion)attacked).getHealth() < 1)
+                        board.get(attackedX).remove(attacked);
+                    attacker.setUsed(true);
                     break;
                 }
                 default:
