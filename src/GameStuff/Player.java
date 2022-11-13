@@ -18,6 +18,33 @@ public class Player {
     private int nrDecks;
     private int indexDeck;
     private Hero hero;
+    public static boolean checkTanksHero(int playerId, ArrayList<ArrayList<Card>> board) {
+        boolean areTanks = false;
+        if (playerId == 1) {
+            for (Card var : board.get(0))
+                if (Card.isTank(var.getName())) {
+                    areTanks = true;
+                    break;
+                }
+            for (Card var : board.get(1))
+                if (Card.isTank(var.getName())) {
+                    areTanks = true;
+                    break;
+                }
+        } else {
+            for (Card var : board.get(2))
+                if (Card.isTank(var.getName())) {
+                    areTanks = true;
+                    break;
+                }
+            for (Card var : board.get(3))
+                if (Card.isTank(var.getName())) {
+                    areTanks = true;
+                    break;
+                }
+        }
+        return !areTanks;
+    }
     public static boolean checkTanks(int playerId, ArrayList<ArrayList<Card>> board, Coordinates attacked) {
         boolean isTank = false;
         boolean areTanks = false;
@@ -52,9 +79,9 @@ public class Player {
         return !areTanks;
     }
     public static boolean checkAttack(int activePlayerId, int row) {
-        if (activePlayerId == 1 && row == 0 || row == 1)
+        if (activePlayerId == 1 && (row == 0 || row == 1))
             return true;
-        return activePlayerId == 2 && row == 2 || row == 3;
+        return activePlayerId == 2 && (row == 2 || row == 3);
     }
     public int getMana() {
         return mana;
@@ -73,8 +100,10 @@ public class Player {
             this.mana += 10;
     }
     public void drawCard() {
-        hand.add(decks.get(indexDeck).get(0));
-        decks.get(indexDeck).remove(0);
+        if (decks.get(indexDeck).size() > 0) {
+            hand.add(decks.get(indexDeck).get(0));
+            decks.get(indexDeck).remove(0);
+        }
     }
     public ArrayList<Card> getHand() {
         return hand;
